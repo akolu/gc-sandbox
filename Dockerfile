@@ -5,6 +5,7 @@
 #
 # Bump pinned versions deliberately when upgrading.
 
+# Pinned 2026-04-06 — bump digest when updating the base image
 FROM docker/sandbox-templates:claude-code@sha256:c35ac0d4ba1d680466b0d267ce732d758819a09db3a1a331207f62efa2e593d0
 
 # --- Pinned versions ---
@@ -33,10 +34,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     util-linux \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-# Go — latest stable (apt version is too old)
+# Go — latest stable (apt version is too old), tarball verified by SHA256
 RUN ARCH=$(dpkg --print-architecture) && \
     GO_VERSION=$(curl -fsSL https://go.dev/VERSION?m=text | head -1 | sed 's/go//') && \
-    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C /usr/local -xz
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" -o /tmp/go.tar.gz && \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz.sha256" -o /tmp/go.tar.gz.sha256 && \
+    echo "$(cat /tmp/go.tar.gz.sha256)  /tmp/go.tar.gz" | sha256sum -c && \
+    tar -C /usr/local -xzf /tmp/go.tar.gz && \
+    rm /tmp/go.tar.gz /tmp/go.tar.gz.sha256
 ENV PATH="/usr/local/go/bin:/home/agent/go/bin:${PATH}"
 
 # Dolt — pinned version, install script verified by SHA256
@@ -51,23 +56,18 @@ RUN git clone https://github.com/${BD_REPO}.git /usr/local/src/beads && \
     git checkout ${BD_COMMIT} && \
     go build -o /usr/local/bin/bd ./cmd/bd
 
-# gc (Gas City) — built from pinned tag, source kept for agent reference
+# gc (Gas City) — built from pinned commit, source kept for agent reference
 RUN git clone https://github.com/gastownhall/gascity.git /usr/local/src/gascity && \
     cd /usr/local/src/gascity && \
     git checkout ${GC_COMMIT} && \
     go build -o /usr/local/bin/gc ./cmd/gc
 
-# Rewrite SSH git URLs to HTTPS (no SSH keys in container, auth via GH_TOKEN)
-RUN git config --global url."https://github.com/".insteadOf "git@github.com:"
-
 # Workspace dirs
-RUN mkdir -p /gc /gc/.dolt-data && chown -R agent:agent /gc
+RUN mkdir -p /gc /gc/.dolt-data
 
 ENV PATH="/gc:/home/agent/.local/bin:${PATH}"
 ENV COLORTERM="truecolor"
 ENV TERM="xterm-256color"
-
-USER root
 
 COPY --chown=agent:agent docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh

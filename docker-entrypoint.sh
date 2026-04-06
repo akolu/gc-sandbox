@@ -5,7 +5,7 @@ set -e
 if [ "$(id -u)" = "0" ]; then
     chown agent:agent /gc/.dolt-data
     export HOME=/home/agent
-    exec setpriv --reuid=1000 --regid=1000 --init-groups -- "$0" "$@"
+    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all -- "$0" "$@"
 fi
 
 # --- Below runs as agent ---
@@ -14,9 +14,12 @@ fi
 if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ]; then
     git config --global user.name "$GIT_USER"
     git config --global user.email "$GIT_EMAIL"
-    dolt config --global --add user.name "$GIT_USER"
-    dolt config --global --add user.email "$GIT_EMAIL"
+    dolt config --global user.name "$GIT_USER"
+    dolt config --global user.email "$GIT_EMAIL"
 fi
+
+# Rewrite SSH git URLs to HTTPS — no SSH keys in container, auth via GH_TOKEN.
+git config --global url."https://github.com/".insteadOf "git@github.com:"
 
 # Use a fine-grained PAT for git auth.
 # Single quotes so $GH_TOKEN is evaluated at runtime by the credential helper, not here.

@@ -4,5 +4,3 @@
 # Claude config bind-mount — not committed
 agent-config/
 
-# agent-home is a named volume, not tracked
-agent-home/

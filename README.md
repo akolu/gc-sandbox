@@ -42,7 +42,7 @@ Set these in `.env` (see `.env.example`).
 | Gas City (`gc`) | Pinned | Fast-moving project — explicit opt-in to updates |
 | beads (`bd`) | Pinned | Same — upgrade deliberately when ready |
 | Go | Floating (latest stable) | Stable release cadence, want security patches automatically |
-| Dolt | Floating (latest stable) | Stable release cadence, want security patches automatically |
+| Dolt | Pinned | Same — upgrade deliberately when ready |
 
 To upgrade `gc` or `bd`, bump the args in `Dockerfile` and run `docker compose build --no-cache`.
 
@@ -51,8 +51,8 @@ To upgrade `gc` or `bd`, bump the args in `Dockerfile` and run `docker compose b
 | Mount | What |
 |---|---|
 | `${FOLDER}` → `/gc` | Your gc folder (city config, rigs, etc.) |
-| `./agent-config` → `/home/agent/.claude` | Claude credentials and settings — persists across `docker compose down -v`, not committed |
-| `agent-home` (named volume) | Claude binary, Go/npm tools — survives `docker compose down` |
+| `./agent-config` → `/home/agent/.claude` | Claude credentials and settings — bind-mounted from host, persists across `docker compose down -v`, not committed |
+| `agent-home` (named volume) | Claude binary, Go/npm tools, git config, shell profiles — survives `docker compose down` |
 | `dolt-data` (named volume) | Dolt data — named volume avoids VirtioFS fsync issues on macOS |
 
 ## Resetting State
@@ -63,17 +63,17 @@ Claude Code conversation history lives in `agent-home`. GC session references li
 # Partial restart (keeps all state)
 docker compose down && docker compose up -d
 
-# Full clean reset — wipe both together or not at all
-docker compose down -v && rm -rf /path/to/your/gc/.gc
+# Full clean reset — wipe both together or not at all (substitute your FOLDER path)
+docker compose down -v && rm -rf ${FOLDER}/.gc
 ```
 
 ## Security Model
 
-The container drops all Linux capabilities except those needed for the root→agent privilege drop at startup (`CHOWN`, `SETUID`, `SETGID`, `DAC_OVERRIDE`, `FOWNER`). These remain in the capability set after the drop — a compromised agent process retains write access to the mounted `FOLDER`.
+The container adds `CHOWN`, `SETUID`, `SETGID`, `DAC_OVERRIDE`, and `FOWNER` for the root→agent privilege drop at startup. The entrypoint strips all inherited and ambient capabilities before exec-ing as agent, so the agent process runs with no Linux capabilities.
 
 | Attack surface | Mitigation |
 |---|---|
 | Host filesystem | Only `FOLDER` and Dolt volume mounted — host is otherwise inaccessible |
-| GitHub credentials | Fine-grained PAT scoped to specific repos; written to `agent-home` volume with mode 600 |
-| Container escape | `no-new-privileges`, all caps dropped except startup set |
+| GitHub credentials | Fine-grained PAT scoped to specific repos; also present in process environment for the container lifetime |
+| Container escape | `no-new-privileges` (blocks suid escalation); all caps stripped by entrypoint before agent process starts |
 | Outbound network | Unrestricted — accepted risk for a local dev sandbox |

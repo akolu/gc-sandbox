@@ -12,8 +12,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: gc-sandbox
-    stdin_open: false
-    tty: false
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -27,7 +25,7 @@ services:
     environment:
       GIT_USER: ${GIT_USER:-YourName}
       GIT_EMAIL: ${GIT_EMAIL:-you@example.com}
-      GH_TOKEN: ${GH_TOKEN}
+      GH_TOKEN: ${GH_TOKEN:?GH_TOKEN must be set in .env}
       HOME: /home/agent
     volumes:
       # Your gc folder. Set FOLDER in .env or pass as env var.
