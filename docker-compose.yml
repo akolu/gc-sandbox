@@ -25,7 +25,6 @@ services:
       - DAC_OVERRIDE
       - FOWNER
     environment:
-      IS_SANDBOX: 1
       GIT_USER: ${GIT_USER:-YourName}
       GIT_EMAIL: ${GIT_EMAIL:-you@example.com}
       GH_TOKEN: ${GH_TOKEN}

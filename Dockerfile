@@ -5,12 +5,14 @@
 #
 # Bump pinned versions deliberately when upgrading.
 
-FROM docker/sandbox-templates:claude-code
+FROM docker/sandbox-templates:claude-code@sha256:c35ac0d4ba1d680466b0d267ce732d758819a09db3a1a331207f62efa2e593d0
 
 # --- Pinned versions ---
 ARG GC_COMMIT=057c7338b49568cde0ba78c0e6cf291289df3094
 ARG BD_REPO=gastownhall/beads
 ARG BD_COMMIT=72170267e00a96ec888f68a3279ddf0173b7adc7
+ARG DOLT_VERSION=v1.85.0
+ARG DOLT_INSTALL_SHA256=4aa97f7349632e845eb3891667b73e7eea5e12999c92f73d6144d1e6fb346697
 
 USER root
 
@@ -37,8 +39,11 @@ RUN ARCH=$(dpkg --print-architecture) && \
     curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C /usr/local -xz
 ENV PATH="/usr/local/go/bin:/home/agent/go/bin:${PATH}"
 
-# Dolt — latest stable
-RUN curl -fsSL https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash
+# Dolt — pinned version, install script verified by SHA256
+RUN curl -fsSL "https://github.com/dolthub/dolt/releases/download/${DOLT_VERSION}/install.sh" -o /tmp/dolt-install.sh && \
+    echo "${DOLT_INSTALL_SHA256}  /tmp/dolt-install.sh" | sha256sum -c && \
+    bash /tmp/dolt-install.sh && \
+    rm /tmp/dolt-install.sh
 
 # bd (beads) — built from pinned commit, source kept for agent reference
 RUN git clone https://github.com/${BD_REPO}.git /usr/local/src/beads && \
