@@ -69,12 +69,12 @@ docker compose down -v && rm -rf "${FOLDER}/.gc"
 
 ## Security Model
 
-The container adds `CHOWN`, `SETUID`, and `SETGID` for the root→agent privilege drop at startup. The entrypoint strips all inherited, ambient, and bounding capabilities before exec-ing as agent, so the agent process runs with no Linux capabilities.
+The container adds `CHOWN`, `SETUID`, and `SETGID` for the root→agent privilege drop at startup. The entrypoint strips all inherited and ambient capabilities before exec-ing as agent. `no-new-privileges` prevents re-escalation via suid binaries.
 
 | Attack surface | Mitigation |
 |---|---|
 | Host filesystem | Only `FOLDER` (read-write) and Dolt volume mounted — host is otherwise inaccessible |
 | GitHub credentials | Fine-grained PAT scoped to specific repos; present in process environment for the container lifetime — readable via `docker inspect` by anyone with Docker socket access on the host |
 | Anthropic credentials | OAuth token in `agent-config/` is bind-mounted into the container — accessible to any code the agent runs |
-| Container escape | `no-new-privileges` (blocks suid escalation); root startup phase holds `CHOWN/SETUID/SETGID` only until entrypoint privilege drop, after which agent process has zero capabilities |
+| Container escape | `no-new-privileges` (blocks suid escalation); root startup phase holds `CHOWN/SETUID/SETGID` only until entrypoint privilege drop, after which agent process has no inherited or ambient capabilities |
 | Outbound network | Unrestricted — accepted risk for a local dev sandbox |

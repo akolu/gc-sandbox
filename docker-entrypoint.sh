@@ -7,7 +7,7 @@ set -e
 if [ "$(id -u)" = "0" ]; then
     chown agent:agent /gc/.dolt-data
     export HOME=/home/agent
-    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all --bounding-set=-all -- /app/docker-entrypoint.sh "$@"
+    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all -- /app/docker-entrypoint.sh "$@"
 fi
 
 # --- Below runs as agent ---
