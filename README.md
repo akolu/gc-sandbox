@@ -1,6 +1,6 @@
 # gc-sandbox
 
-Sandboxed [Gas City](https://github.com/gascity-dev/gc) environment running in Docker. Gas City and beads are built from source at pinned commits for full control over upgrades.
+Sandboxed [Gas City](https://github.com/gastownhall/gascity) environment running in Docker. Gas City and beads are built from source at pinned commits for full control over upgrades.
 
 ## Usage
 
