@@ -1,6 +1,10 @@
 # Secrets
 .env
 
-# Claude config bind-mount — not committed
-agent-config/
+# Claude Code session files — created when running Claude Code in this directory
+.claude/
+
+# Claude config bind-mount — contents not committed, directory tracked for bind-mount
+agent-config/*
+!agent-config/.gitkeep
 

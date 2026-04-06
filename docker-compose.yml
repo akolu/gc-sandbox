@@ -2,7 +2,7 @@
 #
 # Usage:
 #   GIT_USER="Your Name" GIT_EMAIL="you@example.com" FOLDER="/your/code" docker compose up -d
-#   docker compose exec gascity zsh
+#   docker compose exec --user agent gascity zsh
 #
 # Or set these in a .env file (see .env.example).
 
@@ -20,8 +20,6 @@ services:
       - CHOWN
       - SETUID
       - SETGID
-      - DAC_OVERRIDE
-      - FOWNER
     environment:
       GIT_USER: ${GIT_USER:-YourName}
       GIT_EMAIL: ${GIT_EMAIL:-you@example.com}
@@ -32,7 +30,7 @@ services:
       - agent-home:/home/agent
       # Claude config — persists credentials and settings across docker compose down -v.
       - ./agent-config:/home/agent/.claude
-      - ${FOLDER}:/gc
+      - ${FOLDER:?FOLDER must be set in .env}:/gc
       # Dolt on a named volume to avoid VirtioFS fsync issues on macOS.
       - dolt-data:/gc/.dolt-data
 

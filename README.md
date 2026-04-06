@@ -13,7 +13,7 @@ docker compose build
 
 # Start
 docker compose up -d
-docker compose exec gascity zsh
+docker compose exec --user agent gascity zsh
 ```
 
 Inside the container:
@@ -53,23 +53,23 @@ To upgrade `gc` or `bd`, bump the args in `Dockerfile` and run `docker compose b
 | `${FOLDER}` → `/gc` | Your gc folder (city config, rigs, etc.) |
 | `./agent-config` → `/home/agent/.claude` | Claude credentials and settings — bind-mounted from host, persists across `docker compose down -v`, not committed |
 | `agent-home` (named volume) | Claude binary, Go/npm tools, git config, shell profiles — survives `docker compose down` |
-| `dolt-data` (named volume) | Dolt data — named volume avoids VirtioFS fsync issues on macOS |
+| `dolt-data` (named volume) | Dolt data — named volume avoids VirtioFS fsync issues on macOS. Mounted at `/gc/.dolt-data`, shadowing that path on the host `FOLDER` — don't use `$FOLDER/.dolt-data` directly |
 
 ## Resetting State
 
-Claude Code conversation history lives in `agent-home`. GC session references live in `gc/.gc/`. These must stay in sync — losing one without the other causes GC to reference conversations that no longer exist.
+Claude Code conversation history lives in `agent-config/` (the bind mount). GC session references live in `gc/.gc/`. These must stay in sync — losing one without the other causes GC to reference conversations that no longer exist.
 
 ```bash
 # Partial restart (keeps all state)
 docker compose down && docker compose up -d
 
 # Full clean reset — wipe both together or not at all (substitute your FOLDER path)
-docker compose down -v && rm -rf ${FOLDER}/.gc
+docker compose down -v && rm -rf "${FOLDER}/.gc"
 ```
 
 ## Security Model
 
-The container adds `CHOWN`, `SETUID`, `SETGID`, `DAC_OVERRIDE`, and `FOWNER` for the root→agent privilege drop at startup. The entrypoint strips all inherited and ambient capabilities before exec-ing as agent, so the agent process runs with no Linux capabilities.
+The container adds `CHOWN`, `SETUID`, and `SETGID` for the root→agent privilege drop at startup. The entrypoint strips all inherited, ambient, and bounding capabilities before exec-ing as agent, so the agent process runs with no Linux capabilities.
 
 | Attack surface | Mitigation |
 |---|---|

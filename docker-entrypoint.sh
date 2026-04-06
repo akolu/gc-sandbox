@@ -5,7 +5,7 @@ set -e
 if [ "$(id -u)" = "0" ]; then
     chown agent:agent /gc/.dolt-data
     export HOME=/home/agent
-    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all -- "$0" "$@"
+    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all --bounding-set=-all -- "$0" "$@"
 fi
 
 # --- Below runs as agent ---
@@ -14,8 +14,8 @@ fi
 if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ]; then
     git config --global user.name "$GIT_USER"
     git config --global user.email "$GIT_EMAIL"
-    dolt config --global user.name "$GIT_USER"
-    dolt config --global user.email "$GIT_EMAIL"
+    dolt config --global --set user.name "$GIT_USER"
+    dolt config --global --set user.email "$GIT_EMAIL"
 fi
 
 # Rewrite SSH git URLs to HTTPS — no SSH keys in container, auth via GH_TOKEN.
