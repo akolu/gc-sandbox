@@ -1,0 +1,8 @@
+# Secrets
+.env
+
+# Claude config bind-mount — personal settings, never committed
+agent-config/
+
+# agent-home is a named volume, not tracked
+agent-home/

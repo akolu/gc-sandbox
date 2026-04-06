@@ -1,0 +1,46 @@
+# Gas City sandbox
+#
+# Usage:
+#   GIT_USER="Your Name" GIT_EMAIL="you@example.com" FOLDER="/your/code" docker compose up -d
+#   docker compose exec gascity zsh
+#
+# Or set these in a .env file (see .env.example).
+
+services:
+  gascity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gc-sandbox
+    stdin_open: false
+    tty: false
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+      - FOWNER
+    environment:
+      IS_SANDBOX: 1
+      GIT_USER: ${GIT_USER:-YourName}
+      GIT_EMAIL: ${GIT_EMAIL:-you@example.com}
+      GH_TOKEN: ${GH_TOKEN}
+      HOME: /home/agent
+    volumes:
+      # Your gc folder. Set FOLDER in .env or pass as env var.
+      - agent-home:/home/agent
+      # Claude config on a bind mount — persists credentials and settings across
+      # docker compose down -v. Commit settings but never credentials (see .gitignore).
+      - ./agent-config:/home/agent/.claude
+      - ${FOLDER}:/gc
+      # Dolt on a named volume to avoid VirtioFS fsync issues on macOS.
+      - dolt-data:/gc/.dolt-data
+    command: sleep infinity
+
+volumes:
+  agent-home:
+  dolt-data:
