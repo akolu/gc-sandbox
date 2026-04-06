@@ -33,13 +33,11 @@ services:
     volumes:
       # Your gc folder. Set FOLDER in .env or pass as env var.
       - agent-home:/home/agent
-      # Claude config on a bind mount — persists credentials and settings across
-      # docker compose down -v. Commit settings but never credentials (see .gitignore).
+      # Claude config — persists credentials and settings across docker compose down -v.
       - ./agent-config:/home/agent/.claude
       - ${FOLDER}:/gc
       # Dolt on a named volume to avoid VirtioFS fsync issues on macOS.
       - dolt-data:/gc/.dolt-data
-    command: sleep infinity
 
 volumes:
   agent-home:

@@ -10,7 +10,7 @@ FROM docker/sandbox-templates:claude-code
 # --- Pinned versions ---
 ARG GC_COMMIT=057c7338b49568cde0ba78c0e6cf291289df3094
 ARG BD_REPO=gastownhall/beads
-ARG BD_COMMIT=v1.0.0
+ARG BD_COMMIT=72170267e00a96ec888f68a3279ddf0173b7adc7
 
 USER root
 

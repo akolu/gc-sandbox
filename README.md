@@ -57,23 +57,23 @@ To upgrade `gc` or `bd`, bump the args in `Dockerfile` and run `docker compose b
 
 ## Resetting State
 
-Claude Code conversation history lives in `agent-home`. GC session references live in `gc/.gc/`. Keep them in sync.
+Claude Code conversation history lives in `agent-home`. GC session references live in `gc/.gc/`. These must stay in sync — losing one without the other causes GC to reference conversations that no longer exist.
 
 ```bash
 # Partial restart (keeps all state)
 docker compose down && docker compose up -d
 
-# Full clean reset (wipes everything — do both together or not at all)
+# Full clean reset — wipe both together or not at all
 docker compose down -v && rm -rf /path/to/your/gc/.gc
 ```
 
 ## Security Model
 
-The container drops all Linux capabilities except those needed for the root→agent privilege drop at startup.
+The container drops all Linux capabilities except those needed for the root→agent privilege drop at startup (`CHOWN`, `SETUID`, `SETGID`, `DAC_OVERRIDE`, `FOWNER`). These remain in the capability set after the drop — a compromised agent process retains write access to the mounted `FOLDER`.
 
 | Attack surface | Mitigation |
 |---|---|
-| Host filesystem | Only `FOLDER` and Dolt volume mounted |
-| GitHub credentials | Fine-grained PAT scoped to specific repos, never written to disk |
-| Anthropic API key | Dedicated key with spend cap, separate from your main key |
+| Host filesystem | Only `FOLDER` and Dolt volume mounted — host is otherwise inaccessible |
+| GitHub credentials | Fine-grained PAT scoped to specific repos; written to `agent-home` volume with mode 600 |
 | Container escape | `no-new-privileges`, all caps dropped except startup set |
+| Outbound network | Unrestricted — accepted risk for a local dev sandbox |
