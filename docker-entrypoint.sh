@@ -40,6 +40,7 @@ fi
     echo "export GIT_EMAIL='${GIT_EMAIL:-}'"
 } > /home/agent/.env_gc
 chmod 600 /home/agent/.env_gc
+touch /home/agent/.bashrc /home/agent/.zshrc
 grep -qxF '[ -f ~/.env_gc ] && . ~/.env_gc' /home/agent/.bashrc || echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.bashrc
 grep -qxF '[ -f ~/.env_gc ] && . ~/.env_gc' /home/agent/.zshrc || echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.zshrc
 

@@ -1,6 +1,6 @@
 # gc-sandbox
 
-Sandboxed [Gas City](https://github.com/gastownhall/gascity) environment running in Docker. Gas City and beads are built from source at pinned commits for full control over upgrades.
+Sandboxed [Gas City](https://github.com/gastownhall/gascity) environment running in Docker. Refer to the Gas City repo for usage, commands, and configuration. Gas City and beads are built from source at pinned commits for full control over upgrades.
 
 ## Usage
 
@@ -21,7 +21,7 @@ Inside the container:
 ```bash
 gc init /gc
 gc start
-gc session at mayor
+gc session attach mayor
 ```
 
 ## Configuration
@@ -76,5 +76,5 @@ The container adds `CHOWN`, `SETUID`, and `SETGID` for the root→agent privileg
 | Host filesystem | Only `FOLDER` (read-write) and Dolt volume mounted — host is otherwise inaccessible |
 | GitHub credentials | Fine-grained PAT scoped to specific repos; present in process environment for the container lifetime |
 | Anthropic credentials | OAuth token in `agent-config/` is bind-mounted into the container — accessible to any code the agent runs |
-| Container escape | `no-new-privileges` (blocks suid escalation); all caps stripped by entrypoint before agent process starts |
+| Container escape | `no-new-privileges` (blocks suid escalation); root startup phase holds `CHOWN/SETUID/SETGID` only until entrypoint privilege drop, after which agent process has zero capabilities |
 | Outbound network | Unrestricted — accepted risk for a local dev sandbox |
