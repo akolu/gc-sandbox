@@ -7,7 +7,7 @@ set -e
 if [ "$(id -u)" = "0" ]; then
     chown agent:agent /gc/.dolt-data
     export HOME=/home/agent
-    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all --bounding-set=-all -- "$0" "$@"
+    exec setpriv --reuid=1000 --regid=1000 --init-groups --inh-caps=-all --ambient-caps=-all --bounding-set=-all -- /app/docker-entrypoint.sh "$@"
 fi
 
 # --- Below runs as agent ---
@@ -28,7 +28,7 @@ git config --global url."https://github.com/".insteadOf "git@github.com:"
 if [ -n "$GH_TOKEN" ]; then
     git config --global credential.helper '!f() { echo "username=x-access-token"; echo "password=$GH_TOKEN"; }; f'
 else
-    echo "WARNING: GH_TOKEN not set — git operations requiring auth will fail."
+    echo "ERROR: GH_TOKEN not set." && exit 1
 fi
 
 # Write env vars to shell profile so all shells spawned by gc/tmux inherit them.
@@ -38,8 +38,9 @@ fi
     echo "export GH_TOKEN='${GH_TOKEN:-}'"
     echo "export GIT_USER='${GIT_USER:-}'"
     echo "export GIT_EMAIL='${GIT_EMAIL:-}'"
-} > /home/agent/.env_gc
-chmod 600 /home/agent/.env_gc
+} > /home/agent/.env_gc.tmp
+chmod 600 /home/agent/.env_gc.tmp
+mv /home/agent/.env_gc.tmp /home/agent/.env_gc
 touch /home/agent/.bashrc /home/agent/.zshrc
 grep -qxF '[ -f ~/.env_gc ] && . ~/.env_gc' /home/agent/.bashrc || echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.bashrc
 grep -qxF '[ -f ~/.env_gc ] && . ~/.env_gc' /home/agent/.zshrc || echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.zshrc

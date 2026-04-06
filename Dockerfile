@@ -14,7 +14,9 @@ ARG GC_COMMIT=057c7338b49568cde0ba78c0e6cf291289df3094
 ARG BD_REPO=gastownhall/beads
 ARG BD_COMMIT=72170267e00a96ec888f68a3279ddf0173b7adc7
 ARG DOLT_VERSION=v1.85.0
-ARG DOLT_INSTALL_SHA256=4aa97f7349632e845eb3891667b73e7eea5e12999c92f73d6144d1e6fb346697
+# SHA256 of dolt-linux-{amd64,arm64}.tar.gz from github.com/dolthub/dolt/releases/download/${DOLT_VERSION}/
+ARG DOLT_AMD64_SHA256=58e1462ddfbd59b2ccd707a12f70aa7597f1590745b546502049a03cb52e1aa2
+ARG DOLT_ARM64_SHA256=f668c8e0d0276f684741ee66cd0dd18f2be8bf628a92982e8c7f20d1aef7b390
 
 USER root
 
@@ -46,11 +48,18 @@ RUN ARCH=$(dpkg --print-architecture) && \
     rm /tmp/go.tar.gz
 ENV PATH="/usr/local/go/bin:/home/agent/go/bin:${PATH}"
 
-# Dolt — pinned version, install script verified by SHA256
-RUN curl -fsSL "https://github.com/dolthub/dolt/releases/download/${DOLT_VERSION}/install.sh" -o /tmp/dolt-install.sh && \
-    echo "${DOLT_INSTALL_SHA256}  /tmp/dolt-install.sh" | sha256sum -c && \
-    bash /tmp/dolt-install.sh && \
-    rm /tmp/dolt-install.sh
+# Dolt — pinned binary tarball, SHA256 verified per architecture
+RUN ARCH=$(dpkg --print-architecture) && \
+    case "$ARCH" in \
+        amd64) SHA256="${DOLT_AMD64_SHA256}" ;; \
+        arm64) SHA256="${DOLT_ARM64_SHA256}" ;; \
+        *) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/dolthub/dolt/releases/download/${DOLT_VERSION}/dolt-linux-${ARCH}.tar.gz" -o /tmp/dolt.tar.gz && \
+    echo "${SHA256}  /tmp/dolt.tar.gz" | sha256sum -c && \
+    tar -xzf /tmp/dolt.tar.gz -C /tmp && \
+    mv /tmp/dolt-linux-${ARCH}/bin/dolt /usr/local/bin/dolt && \
+    rm -rf /tmp/dolt.tar.gz /tmp/dolt-linux-${ARCH}
 
 # bd (beads) — built from pinned commit, source kept for agent reference
 RUN git clone https://github.com/${BD_REPO}.git /usr/local/src/beads && \
@@ -71,7 +80,7 @@ ENV PATH="/home/agent/.local/bin:${PATH}"
 ENV COLORTERM="truecolor"
 ENV TERM="xterm-256color"
 
-COPY --chown=agent:agent docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --chown=agent:agent --chmod=755 docker-entrypoint.sh /app/docker-entrypoint.sh
 
 WORKDIR /gc
 
