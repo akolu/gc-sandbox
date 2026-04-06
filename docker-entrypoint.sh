@@ -35,9 +35,9 @@ fi
 # (tmux isn't running at container start time, so set-environment -g isn't usable here)
 # GH_TOKEN lands on the agent-home volume — restricted to owner only.
 {
-    echo "export GH_TOKEN='${GH_TOKEN:-}'"
-    echo "export GIT_USER='${GIT_USER:-}'"
-    echo "export GIT_EMAIL='${GIT_EMAIL:-}'"
+    printf 'export GH_TOKEN=%s\n' "$(printf '%s' "${GH_TOKEN:-}" | sed "s/'/'\\\\''/g; s/^/'/; s/$/'/")"
+    printf 'export GIT_USER=%s\n' "$(printf '%s' "${GIT_USER:-}" | sed "s/'/'\\\\''/g; s/^/'/; s/$/'/")"
+    printf 'export GIT_EMAIL=%s\n' "$(printf '%s' "${GIT_EMAIL:-}" | sed "s/'/'\\\\''/g; s/^/'/; s/$/'/")"
 } > /home/agent/.env_gc.tmp
 chmod 600 /home/agent/.env_gc.tmp
 mv /home/agent/.env_gc.tmp /home/agent/.env_gc

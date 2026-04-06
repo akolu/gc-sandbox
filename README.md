@@ -74,7 +74,7 @@ The container adds `CHOWN`, `SETUID`, and `SETGID` for the root→agent privileg
 | Attack surface | Mitigation |
 |---|---|
 | Host filesystem | Only `FOLDER` (read-write) and Dolt volume mounted — host is otherwise inaccessible |
-| GitHub credentials | Fine-grained PAT scoped to specific repos; present in process environment for the container lifetime |
+| GitHub credentials | Fine-grained PAT scoped to specific repos; present in process environment for the container lifetime — readable via `docker inspect` by anyone with Docker socket access on the host |
 | Anthropic credentials | OAuth token in `agent-config/` is bind-mounted into the container — accessible to any code the agent runs |
 | Container escape | `no-new-privileges` (blocks suid escalation); root startup phase holds `CHOWN/SETUID/SETGID` only until entrypoint privilege drop, after which agent process has zero capabilities |
 | Outbound network | Unrestricted — accepted risk for a local dev sandbox |
