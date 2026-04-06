@@ -41,7 +41,7 @@ Set these in `.env` (see `.env.example`).
 |---|---|---|
 | Gas City (`gc`) | Pinned | Fast-moving project — explicit opt-in to updates |
 | beads (`bd`) | Pinned | Same — upgrade deliberately when ready |
-| Go | Floating (latest stable) | Stable release cadence, want security patches automatically |
+| Go | Floating (latest stable) | Stable release cadence, want security patches automatically. SHA256 verified against go.dev at build time (same-origin — protects against corruption, not a compromised origin) |
 | Dolt | Pinned | Same — upgrade deliberately when ready |
 
 To upgrade `gc` or `bd`, bump the args in `Dockerfile` and run `docker compose build --no-cache`.
@@ -73,7 +73,8 @@ The container adds `CHOWN`, `SETUID`, and `SETGID` for the root→agent privileg
 
 | Attack surface | Mitigation |
 |---|---|
-| Host filesystem | Only `FOLDER` and Dolt volume mounted — host is otherwise inaccessible |
-| GitHub credentials | Fine-grained PAT scoped to specific repos; also present in process environment for the container lifetime |
+| Host filesystem | Only `FOLDER` (read-write) and Dolt volume mounted — host is otherwise inaccessible |
+| GitHub credentials | Fine-grained PAT scoped to specific repos; present in process environment for the container lifetime |
+| Anthropic credentials | OAuth token in `agent-config/` is bind-mounted into the container — accessible to any code the agent runs |
 | Container escape | `no-new-privileges` (blocks suid escalation); all caps stripped by entrypoint before agent process starts |
 | Outbound network | Unrestricted — accepted risk for a local dev sandbox |

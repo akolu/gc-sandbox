@@ -2,6 +2,8 @@
 set -e
 
 # Fix ownership of Docker-managed named volumes (created as root:root).
+# Note: /gc itself is a bind-mount from FOLDER — agent (uid 1000) must own it on the host
+# or gc operations will fail with permission denied.
 if [ "$(id -u)" = "0" ]; then
     chown agent:agent /gc/.dolt-data
     export HOME=/home/agent
