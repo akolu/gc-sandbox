@@ -44,8 +44,8 @@ fi
     echo "export GIT_USER='${GIT_USER:-}'"
     echo "export GIT_EMAIL='${GIT_EMAIL:-}'"
 } > /home/agent/.env_gc
-echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.bashrc
-echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.zshrc
+grep -qxF '[ -f ~/.env_gc ] && . ~/.env_gc' /home/agent/.bashrc || echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.bashrc
+grep -qxF '[ -f ~/.env_gc ] && . ~/.env_gc' /home/agent/.zshrc || echo '[ -f ~/.env_gc ] && . ~/.env_gc' >> /home/agent/.zshrc
 
 # Init city if not already initialized.
 if [ ! -f /gc/city.toml ]; then

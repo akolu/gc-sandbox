@@ -32,7 +32,6 @@ gc session at mayor
 | `GIT_USER` | Your git display name |
 | `GIT_EMAIL` | Your git email |
 | `GH_TOKEN` | Fine-grained GitHub PAT scoped to the repos GC needs |
-| `ANTHROPIC_API_KEY` | Dedicated Anthropic API key (use a separate key with a spend cap) |
 
 Set these in `.env` (see `.env.example`).
 
@@ -52,7 +51,7 @@ To upgrade `gc` or `bd`, bump the args in `Dockerfile` and run `docker compose b
 | Mount | What |
 |---|---|
 | `${FOLDER}` → `/gc` | Your gc folder (city config, rigs, etc.) |
-| `./agent-config` → `/home/agent/.claude` | Claude settings — commit non-sensitive config, gitignore credentials |
+| `./agent-config` → `/home/agent/.claude` | Claude credentials and settings — persists across `docker compose down -v`, not committed |
 | `agent-home` (named volume) | Claude binary, Go/npm tools — survives `docker compose down` |
 | `dolt-data` (named volume) | Dolt data — named volume avoids VirtioFS fsync issues on macOS |
 
